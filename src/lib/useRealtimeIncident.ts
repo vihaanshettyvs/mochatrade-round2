@@ -43,14 +43,18 @@ export function useRealtimeIncident(incidentId: string | null) {
         setDecisions((prev) => [payload.new, ...prev]);
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'liquidation_cases', filter: `incident_id=eq.${incidentId}` }, (payload) => {
+        const newCase = payload.new as { id: string; [key: string]: any };
+
         setCases((prev) => {
-          const index = prev.findIndex((c) => c.id === payload.new.id);
+          const index = prev.findIndex((c) => c.id === newCase.id);
+
           if (index >= 0) {
             const updated = [...prev];
-            updated[index] = payload.new;
+            updated[index] = newCase;
             return updated;
           }
-          return [payload.new, ...prev];
+
+          return [newCase, ...prev];
         });
       })
       .subscribe();
